@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from pysint import Search
+from pysint import Search,Console
 
 class App:
     def __argParse(self):
@@ -12,8 +12,11 @@ class App:
     def run(self):
         __arguments = self.__argParse()
         if __arguments.query:
+            Console.display(Console.BANNER)
             search = Search(__arguments.query,__arguments.filter) # __arguments.query,__arguments.filter
             search.getSearchedLinks()
+        else:
+            Console.display(f"\n{Console.CYAN}Başlamak için: {Console.PURPLE}python app.py -h")
 
 if __name__ == "__main__":
     app:App = App()
