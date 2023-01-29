@@ -1,0 +1,4 @@
+https://www.instagram.com/api/v1/users/web_profile_info/
+
+
+twitter, instagram, facebook, github, tiktok,linkedin, youtube sitelerinde arama yapar

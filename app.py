@@ -2,9 +2,12 @@ from argparse import ArgumentParser
 from pysint import Search,Console
 
 class App:
+    def __init__(self) -> None:
+        self.engines = ["google","bing"]
     def __argParse(self):
         argP:ArgumentParser = ArgumentParser(description='How to Using')
         argP.add_argument("-q","--query","--dork",type=str)
+        argP.add_argument("-e","--engine",type=str)
         argP.add_argument("-f","--filter",type=str,help="Özellikle belirtilen url adına işlem yapar")
         argP.add_argument("-px","--proxy",type=str,help="Proxy dosya yolu TxT formatında dosya gerekli.")
         return argP.parse_args()

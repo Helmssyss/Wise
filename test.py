@@ -1,42 +1,21 @@
-# # from distutils.spawn import find_executable
-# # print(find_executable("make"))
+# import requests
+# from random import choice
 
-# # import re
-
-# # print(re.search(r"\b{0}\b".format("tiktok"),"https://www.tiktok.com/@cznburak/video/6768095078679465221").string)
-# # a = "https://www.turkhackteam.org/konular/siberatay-temp-mail-botu-remake.2028134/qpo2ejqwporqw"
-
-# # print(a[:77])
-
-# from urllib.parse import urlparse
-
-# print(urlparse("https://books.google.com.tr/books?id=6xB1EAAAQBAJ&pg=PA165&lpg=PA165&dq=elraenn&source=bl&ots=x3qMNXUvfG&sig=ACfU3U3ynUPFSGXFfXino5NQFXhcUAZY7A&hl=tr&sa=X&ved=2ahUKEwjjlIa6_-n8AhVhrJUCHXnyB4w4KBDoAXoECAIQA").netloc)
-
-import threading
-import time
-
-def helper_function(event_obj, timeout,i):
-  # Thread has started, but it will wait 10 seconds for the event  
-  print("Thread started, for the event to set")
- 
-  flag = event_obj.wait(timeout)
-  if flag:
-    print("Event was set to true() earlier, moving ahead with the thread")
-  else:
-    print("Time out occured, event internal flag still false. Executing thread without waiting for event")
-    print("Value to be printed=", i)
-    
-if __name__ == '__main__':
-  # Initialising an event object
-  event_obj = threading.Event()
-  
-  # starting the thread who will wait for the event
-  thread1 = threading.Thread(target=helper_function, args=(event_obj,10,27))
-  thread1.start()
-  # sleeping the current thread for 5 seconds
-  time.sleep(5)
-  
-  # generating the event
-  event_obj.set()
-  print("Event is set to true. Now threads can be released.")
-  print()
+# def useragents():
+#     dpi_phone = ['133','320','515','160','640','240','120''800','480','225','768','216','1024']
+#     model_phone = ['Nokia 2.4','HUAWEI','Galaxy','Unlocked Smartphones','Nexus 6P','Mobile Phones','Xiaomi','samsung','OnePlus']
+#     pxl_phone = ['623x1280','700x1245','800x1280','1080x2340','1320x2400','1242x2688']
+#     i_version = ['114.0.0.20.2','114.0.0.38.120','114.0.0.20.70','114.0.0.28.120','114.0.0.0.24','114.0.0.0.41']
+#     user_agent = f'Instagram {choice(i_version)} Android (30/3.0; {choice(dpi_phone)}dpi; {choice(pxl_phone)}; huawei/google; {choice(model_phone)}; angler; angler; en_US)'
+#     return user_agent
+# data = {
+#   "username":"zuck"
+# }
+# header = {
+#   'Host':'i.instagram.com','Accept':'*/*',  'User-Agent': useragents(),
+#   'Cookie':'missing','Accept-Encoding':'gzip, deflate',
+#   'Accept-Language':'en-US','X-IG-Capabilities':'3brTvw==',
+#   'X-IG-Connection-Type':'WIFI','Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',
+# }
+# # cookies = requests.get("https://www.instagram.com",headers=header).cookies.get_dict()
+# print(requests.get("https://www.instagram.com/api/v1/users/web_profile_info/?username=zuck",headers=header).json())

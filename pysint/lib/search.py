@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from re import search as re_search
 from urllib.parse import urlparse
 from time import sleep
+
 import threading
 import queue
 import typing
@@ -12,9 +13,11 @@ import requests
 
 class Search:
     __threads:list[threading.Thread] = []
-    __lock = threading.Lock()
-    __que = queue.Queue()
-    page:int = 11 # test amaçlı 10
+    __lock:threading.Lock = threading.Lock()
+    __que:queue.Queue = queue.Queue()
+    __event:threading.Event = threading.Event()
+    __event_flag:bool = False
+    page:int = 5 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[str]=None,filter:typing.Optional[str]=None) -> None:
         self.__filter = filter
@@ -48,40 +51,20 @@ class Search:
                 try:
                     self.__lock.acquire()
                     if i.a['href'].startswith("https"):
-                        self.__que.put(i.a['href'])
+                        if "books" not in urlparse(i.a['href']).netloc:
+                            self.__que.put(i.a['href'])
                 except Exception as e:
                     continue
                 finally:
                     self.__lock.release()
 
     def __request(self,slot:int,_filter:bool=True):
-        params = {
-            "q" : self.__query,
-            "start": slot
-        }
-        response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
-        soup = BeautifulSoup(response.content,"lxml")
-        capctha = soup.find("form",attrs={"id":"captcha-form"})
-        attr = {"class":"yuRUbf"}
-        if capctha: # captcha yakalanırsa
+        if self.__findCaptcha(): # captcha yakalanırsa
             print("BING")
-            params = {
-                "q" : self.__query,
-                "sp":'1',
-                "first": slot
-            }
-            response = requests.get(BINGSEARCH,params=params,headers=HEADER,cookies=self.__getCookie(BINGMAIN))
-            soup = BeautifulSoup(response.content,"lxml")
-            attr = {"class":"b_title"}
-            return self.__linkfilter(response,attr,_filter)
-
-        if capctha == None: # captcha yakalanmazsa
+            self.__searchEngine(slot,True)
+        else: # captcha yakalanmazsa
             print("GOOGLE")
-            if _filter: #filtre kullanılırsa
-                return self.__linkfilter(response,attr,_filter)
-
-            else: #filtre kullanılmazsa
-                return self.__linkfilter(response,attr)
+            self.__searchEngine(slot)
 
     def searchQuerySet(self,slot:int):
         if isinstance(self.__filter,str):
@@ -106,7 +89,43 @@ class Search:
                 count += 1
                 Console.display_links(count,self.__que.get())
             Console.display(f"{Console.GREEN}|                            |")
-            Console.display(f"{Console.GREEN}├───────({Console.CYAN}OSINT FINISHED{Console.GREEN})─────╯")
-            Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}ARATILAN{Console.GREEN})──[{Console.CYAN}{self.__query}{Console.GREEN}]")
+            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})─────╯")
+            sleep(1)
+            # Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}ARATILAN{Console.GREEN})──[{Console.CYAN}{self.__query}{Console.GREEN}]")
+            Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}Scanning Popular Social media accounts.{Console.GREEN})")
         else:
             Console.warn_display("No Results\n")
+    
+    def __searchEngine(self,slot:int,other_engine:bool=False):
+        if not other_engine:
+            #Google
+            params = {
+                "q" : self.__query,
+                "start": slot
+            }
+            response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
+            attr = {"class":"yuRUbf"}
+            return self.__linkfilter(response,attr,isinstance(self.__filter,str))
+        else:
+            #Bing
+            params = {
+                "q" : self.__query,
+                "sp":'1',
+                "first": slot
+            }
+            response = requests.get(BINGSEARCH,params=params,headers=HEADER,cookies=self.__getCookie(BINGMAIN))
+            attr = {"class":"b_title"}
+            return self.__linkfilter(response,attr,isinstance(self.__filter,str))
+    
+    def __findCaptcha(self) -> bool:
+        params = {
+            "q" : self.__query,
+            "start": '1'
+        }
+        response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
+        soup = BeautifulSoup(response.content,"lxml")
+        capctha = soup.find("form",attrs={"id":"captcha-form"})
+        if capctha:
+            return True
+        else:
+            return False
