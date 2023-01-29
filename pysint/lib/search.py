@@ -1,6 +1,7 @@
 from .const import *
 from .proxies import proxies
 from .console import Console
+from .instagram import getProfile
 from bs4 import BeautifulSoup
 from re import search as re_search
 from urllib.parse import urlparse
@@ -19,9 +20,21 @@ class Search:
     __event_flag:bool = False
     page:int = 5 # test amaçlı 10
     # flag
-    def __init__(self,query:typing.Optional[str]=None,filter:typing.Optional[str]=None) -> None:
+    def __init__(self,query:typing.Optional[list]=None,
+                     filter:typing.Optional[str]=None,
+                     social_media:typing.Optional[list]=None
+                ) -> None:
         self.__filter = filter
-        self.__query = query
+        self.__query = ""
+        self.__social_media = ""
+        for q in query:
+            self.__query += q+'+'
+        self.__query = self.__query[:len(self.__query)-1]
+        
+        if social_media != None:
+            for s in social_media:
+                self.__social_media += s
+
         if isinstance(filter,str):
             filter.lower()
 
@@ -88,10 +101,9 @@ class Search:
             while not self.__que.empty():
                 count += 1
                 Console.display_links(count,self.__que.get())
-            Console.display(f"{Console.GREEN}|                            |")
-            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})─────╯")
+            Console.display(f"{Console.GREEN}|")
+            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})")
             sleep(1)
-            # Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}ARATILAN{Console.GREEN})──[{Console.CYAN}{self.__query}{Console.GREEN}]")
             Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}Scanning Popular Social media accounts.{Console.GREEN})")
         else:
             Console.warn_display("No Results\n")
