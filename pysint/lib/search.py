@@ -17,20 +17,19 @@ class Search:
     __lock:threading.Lock = threading.Lock()
     __que:queue.Queue = queue.Queue()
     __event:threading.Event = threading.Event()
-    __event_flag:bool = False
     page:int = 5 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[list]=None,
                      filter:typing.Optional[str]=None,
-                     social_media:typing.Optional[list]=None
+                     social_media:typing.Optional[bool]=False
                 ) -> None:
         self.__filter = filter
         self.__query = ""
-        self.__social_media = ""
+        self.__social_media = social_media
         for q in query:
             self.__query += q+'+'
         self.__query = self.__query[:len(self.__query)-1]
-
+        print(self.__query)
         if isinstance(filter,str):
             filter.lower()
 
@@ -101,6 +100,9 @@ class Search:
             Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})")
             sleep(1)
             Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}Scanning Popular Social media accounts.{Console.GREEN})")
+            if self.__social_media:
+                print("sosyal medya")
+                self.social()
         else:
             Console.warn_display("No Results\n")
     
@@ -137,3 +139,7 @@ class Search:
             return True
         else:
             return False
+    
+    def social(self):
+        for user in self.__query.split('+'):
+            print(getProfile(user,userAgent()))
