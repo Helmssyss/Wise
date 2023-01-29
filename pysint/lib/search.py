@@ -30,10 +30,6 @@ class Search:
         for q in query:
             self.__query += q+'+'
         self.__query = self.__query[:len(self.__query)-1]
-        
-        if social_media != None:
-            for s in social_media:
-                self.__social_media += s
 
         if isinstance(filter,str):
             filter.lower()
