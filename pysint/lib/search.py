@@ -73,8 +73,10 @@ class Search:
             self.__findCaptcha()
             print("GOOGLE")
             self.__searchEngine(slot)
-        except CaptchaError as e:
-            Console.display(e)
+            
+        except CaptchaError:
+            Console.err_display("F_ck, Captcha!")
+            Console.err_display("Alternative Searched...")
             print("BING")
             self.__searchEngine(slot,True)
 
