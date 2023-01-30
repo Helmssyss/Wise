@@ -20,7 +20,7 @@ class Search:
     page:int = 5 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[list]=None,
-                     filter:typing.Optional[str]=None,
+                     filter:typing.Optional[list]=None,
                      social_media:typing.Optional[bool]=False
                 ) -> None:
         self.__filter = filter
@@ -30,8 +30,8 @@ class Search:
             self.__query += q+'+'
         self.__query = self.__query[:len(self.__query)-1]
         print(self.__query)
-        if isinstance(filter,str):
-            filter.lower()
+        if isinstance(filter,list):
+            self.__filter = [i.lower() for i in filter]
 
     def __getCookie(self,main_url:str) -> dict:
         __result = requests.get(main_url,headers=HEADER)
@@ -41,14 +41,15 @@ class Search:
     def __linkfilter(self,response:requests.Response,attr:dict,_filter:bool=False):
         soup = BeautifulSoup(response.content,"lxml")
         if _filter:
-            print(_filter,self.__filter)
             for i in  soup.find_all("div",attrs=attr):
                 try:
                     self.__lock.acquire()
-                    link = i.a["href"]
-                    match = re_search(r"\b{0}\b".format(self.__filter),link)
-                    if match:
-                        self.__que.put(match.string)
+                    for j in self.__filter:
+                        link = i.a["href"]
+                        match = re_search(r"\b{0}\b".format(j),link)
+                        if match:
+                            print(_filter,j)
+                            self.__que.put(match.string)
                 except Exception as e:
                     continue
                 finally:
@@ -115,7 +116,7 @@ class Search:
             }
             response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
             attr = {"class":"yuRUbf"}
-            return self.__linkfilter(response,attr,isinstance(self.__filter,str))
+            return self.__linkfilter(response,attr,isinstance(self.__filter,list))
         else:
             #Bing
             params = {
@@ -125,7 +126,7 @@ class Search:
             }
             response = requests.get(BINGSEARCH,params=params,headers=HEADER,cookies=self.__getCookie(BINGMAIN))
             attr = {"class":"b_title"}
-            return self.__linkfilter(response,attr,isinstance(self.__filter,str))
+            return self.__linkfilter(response,attr,isinstance(self.__filter,list))
     
     def __findCaptcha(self) -> bool:
         params = {
