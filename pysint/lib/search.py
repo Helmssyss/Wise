@@ -2,6 +2,7 @@ from .const import *
 from .proxies import proxies
 from .console import Console
 from .instagram import getProfile
+from ..exceptions import CaptchaError
 from bs4 import BeautifulSoup
 from re import search as re_search
 from urllib.parse import urlparse
@@ -17,7 +18,7 @@ class Search:
     __lock:threading.Lock = threading.Lock()
     __que:queue.Queue = queue.Queue()
     __event:threading.Event = threading.Event()
-    page:int = 5 # test amaçlı 10
+    page:int = 11 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[list]=None,
                      filter:typing.Optional[list]=None,
@@ -41,7 +42,7 @@ class Search:
     def __linkfilter(self,response:requests.Response,attr:dict,_filter:bool=False):
         soup = BeautifulSoup(response.content,"lxml")
         if _filter:
-            for i in  soup.find_all("div",attrs=attr):
+            for i in soup.find_all("div",attrs=attr):
                 try:
                     self.__lock.acquire()
                     for j in self.__filter:
@@ -67,20 +68,22 @@ class Search:
                 finally:
                     self.__lock.release()
 
-    def __request(self,slot:int,_filter:bool=True):
-        if self.__findCaptcha(): # captcha yakalanırsa
-            print("BING")
-            self.__searchEngine(slot,True)
-        else: # captcha yakalanmazsa
+    def __request(self,slot:int):
+        try:
+            self.__findCaptcha()
             print("GOOGLE")
             self.__searchEngine(slot)
+        except CaptchaError as e:
+            Console.display(e)
+            print("BING")
+            self.__searchEngine(slot,True)
 
     def searchQuerySet(self,slot:int):
         if isinstance(self.__filter,str):
             return self.__request(slot=slot)
 
         else:
-            return self.__request(slot=slot,_filter=False)
+            return self.__request(slot=slot)
 
     def getSearchedLinks(self):
         for i in range(1, 11 if self.page == 1 else (self.page * 10) + 1 ,11):
@@ -137,9 +140,7 @@ class Search:
         soup = BeautifulSoup(response.content,"lxml")
         capctha = soup.find("form",attrs={"id":"captcha-form"})
         if capctha:
-            return True
-        else:
-            return False
+            raise CaptchaError()
     
     def social(self):
         for user in self.__query.split('+'):
