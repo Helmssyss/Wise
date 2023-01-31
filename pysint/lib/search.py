@@ -140,7 +140,6 @@ class Search:
         response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
         soup = BeautifulSoup(response.content,"lxml")
         captcha = soup.find("form",attrs={"id":"captcha-form"})
-        captcha = True
         if captcha:
             raise CaptchaError()
     
