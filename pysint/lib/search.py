@@ -11,6 +11,19 @@ from time import sleep
 import threading
 import queue
 import typing
+from .const import *
+from .proxies import proxies
+from .console import Console
+from .instagram import getProfile
+from ..exceptions import CaptchaError
+from bs4 import BeautifulSoup
+from re import search as re_search
+from urllib.parse import urlparse
+from time import sleep
+
+import threading
+import queue
+import typing
 import requests
 
 class Search:
@@ -76,7 +89,7 @@ class Search:
 
         except CaptchaError:
             self.__event.set()
-            print("bing")
+            # print("bing")
             self.__searchEngine(slot,True)
 
     def searchQuerySet(self,slot:int):
@@ -96,15 +109,16 @@ class Search:
             thread.join()
 
         if self.__event.is_set():
-            Console.err_display("F_ck, Captcha!\b")
-            Console.err_display("Alternative Searched...\b")
-            self.__event.clear()
+            Console.warn_display("F_ck, Captcha!\b")
             sleep(1)
+            Console.warn_display("Alternative Searched...\b")
+            self.__event.clear()
+            sleep(2)
 
         if self.__que.qsize() != 0:
             while not self.__que.empty():
                 Console.display_links(self.__que.get())
-            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})")
+            Console.display(f"\n{Console.GREEN}{Console.CYAN}Search has end{Console.GREEN})")
             if self.__social_media:
                 print("sosyal medya")
                 self.social()
@@ -140,6 +154,7 @@ class Search:
         response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
         soup = BeautifulSoup(response.content,"lxml")
         captcha = soup.find("form",attrs={"id":"captcha-form"})
+        # captcha = True
         if captcha:
             raise CaptchaError()
     
