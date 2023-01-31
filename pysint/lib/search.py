@@ -11,19 +11,6 @@ from time import sleep
 import threading
 import queue
 import typing
-from .const import *
-from .proxies import proxies
-from .console import Console
-from .instagram import getProfile
-from ..exceptions import CaptchaError
-from bs4 import BeautifulSoup
-from re import search as re_search
-from urllib.parse import urlparse
-from time import sleep
-
-import threading
-import queue
-import typing
 import requests
 
 class Search:
