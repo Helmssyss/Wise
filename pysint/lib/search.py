@@ -18,7 +18,7 @@ class Search:
     __lock:threading.Lock = threading.Lock()
     __que:queue.Queue = queue.Queue()
     __event:threading.Event = threading.Event()
-    page:int = 5 # test amaçlı 10
+    page:int = 11 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[list]=None,
                      filter:typing.Optional[list]=None,
