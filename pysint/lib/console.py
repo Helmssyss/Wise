@@ -19,9 +19,9 @@ class Console:
 \t\t                        ______
 \t\t             ______,---'__,---'
 \t\t         _,-'---_---__,---'
-{CYAN}\t\t  /_    (,  ---____',             {PURPLE}>_ {RED}Helmsys  : https://github.com/Arif-Helmsys
-{CYAN}\t\t /  ',,   `, ,-'                  {PURPLE}>_ {RED}Coderx37 : https://github.com/fenrirsoftware
-{CYAN}\t\t;/)   ,',,_/,'                    {PURPLE}>_ {RED}Nemesis  : https://github.com/nemes1spy{CYAN}
+\t\t  /_    (,  ---____',
+\t\t /  ',,   `, ,-'
+\t\t;/)   ,',,_/,'
 \t\t| /\   ,.'//\\
 \t\t`-` \ ,,'    `. 
 \t\t     `',   ,-- `.
@@ -30,13 +30,16 @@ class Console:
 \t\t  __//   __;_`-  \ `;.__,;'
 \t\t((,--,) (((,------;  `--'
 \t\t────────(GRYPHON)───────────
+\t{PURPLE}>_ {RED}Helmsys  : https://github.com/Arif-Helmsys{CYAN}
     """
 
     @classmethod
-    def display_links(cls,count,printable:str):
+    def display_links(cls,*printable:str):
+        output = ""
+        for out in printable:
+            output += out + chr(32)
         print(
-f"{cls.RED}├─[ {cls.CYAN}{datetime.now().strftime('%H:%M:%S')}{cls.RED} ] \
-- [{cls.CYAN}{count:02d}{cls.CYAN}{cls.RED}] - {cls.PURPLE}{printable}")
+f"{cls.RED}[{cls.CYAN}+{cls.RED}] - {cls.PURPLE}{output}")
         sleep(0.2)
 
     @classmethod
@@ -56,6 +59,4 @@ f"{cls.RED}├─[ {cls.CYAN}{datetime.now().strftime('%H:%M:%S')}{cls.RED} ] \
     
     @classmethod
     def cmd_input(cls) -> str:
-        return input(Console.__CMDLINE)
-
-# Console.cmd_input()
+        return input(cls.__CMDLINE)

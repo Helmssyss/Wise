@@ -1,12 +1,13 @@
 from .const import *
 from .proxies import proxies
 from .console import Console
-from .instagram import getProfile
+from .twitter import Twitter
 from ..exceptions import CaptchaError
 from bs4 import BeautifulSoup
 from re import search as re_search
 from urllib.parse import urlparse
 from time import sleep
+from pandas import DataFrame
 
 import threading
 import queue
@@ -20,13 +21,12 @@ class Search:
     __event:threading.Event = threading.Event()
     page:int = 11 # test amaçlı 10
     # flag
-    def __init__(self,query:typing.Optional[list]=None,
-                     filter:typing.Optional[list]=None,
-                     social_media:typing.Optional[bool]=False
-                ) -> None:
+    def __init__(self,query:typing.Optional[list]=None,filter:typing.Optional[list]=None,social_media:typing.Optional[bool]=False):
         self.__filter = filter
         self.__query = ""
         self.__social_media = social_media
+        self.__user_social_medias_searched:list[tuple] = []
+        self.__twitter = Twitter(requests)
         for q in query:
             self.__query += q+'+'
         self.__query = self.__query[:len(self.__query)-1]
@@ -34,7 +34,7 @@ class Search:
         if isinstance(filter,list):
             self.__filter = [i.lower() for i in filter]
 
-    def __getCookie(self,main_url:str) -> dict:
+    def __getCookie(self,main_url:str) -> dict[str,str]:
         __result = requests.get(main_url,headers=HEADER)
         __cookies = __result.cookies.get_dict()
         return __cookies
@@ -71,12 +71,12 @@ class Search:
     def __request(self,slot:int):
         try:
             self.__findCaptcha()
-            print("GOOGLE")
+            # print("GOOGLE")
             self.__searchEngine(slot)
 
         except CaptchaError:
             self.__event.set()
-            # print("bing")
+            # print("BING")
             self.__searchEngine(slot,True)
 
     def searchQuerySet(self,slot:int):
@@ -87,31 +87,48 @@ class Search:
             return self.__request(slot=slot)
 
     def getSearchedLinks(self):
-        for i in range(1, 11 if self.page == 1 else (self.page * 10) + 1 ,11):
-            t = threading.Thread(target=self.searchQuerySet,args=(i,))
-            t.start()
-            self.__threads.append(t)
+        if not self.__social_media:
+            for i in range(1, 11 if self.page == 1 else (self.page * 10) + 1 ,11):
+                t = threading.Thread(target=self.searchQuerySet,args=(i,))
+                t.start()
+                self.__threads.append(t)
 
-        for thread in self.__threads:
-            thread.join()
+            for thread in self.__threads:
+                thread.join()
 
-        if self.__event.is_set():
-            Console.warn_display("F_ck, Captcha!\b")
-            sleep(1)
-            Console.warn_display("Alternative Searched...\b")
-            self.__event.clear()
-            sleep(2)
+            if self.__event.is_set():
+                Console.warn_display("F_ck, Captcha!")
+                sleep(1)
+                Console.warn_display("Alternative Searched...")
+                self.__event.clear()
+                sleep(2)
 
-        if self.__que.qsize() != 0:
-            while not self.__que.empty():
-                Console.display_links(self.__que.get())
-            Console.display(f"\n{Console.GREEN}{Console.CYAN}Search has end{Console.GREEN})")
-            if self.__social_media:
-                print("sosyal medya")
-                self.social()
+            if self.__que.qsize() != 0:
+                while not self.__que.empty():
+                    Console.display_links(self.__que.get())
+                    self.__que.tast_done()
+                    
+                Console.display(f"\n{Console.GREEN}{Console.CYAN}Search has end{Console.GREEN}")
+            else:
+                Console.err_display("No Results")
+
         else:
-            Console.warn_display("No Results\n")
-    
+            self.__threads.clear()
+            for i in range(10):
+                t = threading.Thread(target=self.social,args=(i,))
+                t.start()
+                self.__threads.append(t)
+
+            for thread in self.__threads:
+                thread.join()
+            
+            if self.__que.qsize() != 0:
+                Console.display("screen_name\t","name\t","location\t")
+                Console.display("──"*30)
+                while not self.__que.empty():
+                    screen_name,name,location = self.__que.get()
+                    Console.display_links(f"{screen_name:<20}",f"{name:<20}",f"{location:<50}")
+
     def __searchEngine(self,slot:int,other_engine:bool=False):
         if not other_engine:
             #Google
@@ -133,7 +150,7 @@ class Search:
             attr = {"class":"b_title"}
             return self.__linkfilter(response,attr,isinstance(self.__filter,list))
     
-    def __findCaptcha(self) -> None:
+    def __findCaptcha(self):
         params = {
             "q" : self.__query,
             "start": '1'
@@ -144,7 +161,14 @@ class Search:
         # captcha = True
         if captcha:
             raise CaptchaError()
-    
-    def social(self):
+
+    def social(self,num:int):
         for user in self.__query.split('+'):
-            print(user)
+            try:
+                searched = self.__twitter.userSearch(user,userAgent())
+                screen_name = searched["users"][num]["screen_name"]
+                name = searched["users"][num]["name"]
+                location = searched["users"][num]["location"]
+                self.__que.put((screen_name,name,location))
+            except:
+                pass
