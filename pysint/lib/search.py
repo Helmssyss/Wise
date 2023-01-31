@@ -18,7 +18,7 @@ class Search:
     __lock:threading.Lock = threading.Lock()
     __que:queue.Queue = queue.Queue()
     __event:threading.Event = threading.Event()
-    page:int = 11 # test amaçlı 10
+    page:int = 5 # test amaçlı 10
     # flag
     def __init__(self,query:typing.Optional[list]=None,
                      filter:typing.Optional[list]=None,
@@ -73,11 +73,10 @@ class Search:
             self.__findCaptcha()
             print("GOOGLE")
             self.__searchEngine(slot)
-            
+
         except CaptchaError:
-            Console.err_display("F_ck, Captcha!")
-            Console.err_display("Alternative Searched...")
-            print("BING")
+            self.__event.set()
+            print("bing")
             self.__searchEngine(slot,True)
 
     def searchQuerySet(self,slot:int):
@@ -96,16 +95,16 @@ class Search:
         for thread in self.__threads:
             thread.join()
 
-        count = 0
-        if self.__que.qsize() != 0:
-            Console.display(f"{chr(32)*7}{Console.CYAN}TIME{chr(32)*6}COUNT{chr(32)*9}LINKS")
-            while not self.__que.empty():
-                count += 1
-                Console.display_links(count,self.__que.get())
-            Console.display(f"{Console.GREEN}|")
-            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})")
+        if self.__event.is_set():
+            Console.err_display("F_ck, Captcha!\b")
+            Console.err_display("Alternative Searched...\b")
+            self.__event.clear()
             sleep(1)
-            Console.display(f"{Console.GREEN}|\n╰───────({Console.CYAN}Scanning Popular Social media accounts.{Console.GREEN})")
+
+        if self.__que.qsize() != 0:
+            while not self.__que.empty():
+                Console.display_links(self.__que.get())
+            Console.display(f"{Console.GREEN}├───────({Console.CYAN}Search has end{Console.GREEN})")
             if self.__social_media:
                 print("sosyal medya")
                 self.social()
@@ -133,17 +132,18 @@ class Search:
             attr = {"class":"b_title"}
             return self.__linkfilter(response,attr,isinstance(self.__filter,list))
     
-    def __findCaptcha(self) -> bool:
+    def __findCaptcha(self) -> None:
         params = {
             "q" : self.__query,
             "start": '1'
         }
         response = requests.get(GOOGLESEARCH,params=params,headers=HEADER,cookies=self.__getCookie(GOOGLEMAIN))
         soup = BeautifulSoup(response.content,"lxml")
-        capctha = soup.find("form",attrs={"id":"captcha-form"})
-        if capctha:
+        captcha = soup.find("form",attrs={"id":"captcha-form"})
+        captcha = True
+        if captcha:
             raise CaptchaError()
     
     def social(self):
         for user in self.__query.split('+'):
-            print(getProfile(user,userAgent()))
+            print(user)
