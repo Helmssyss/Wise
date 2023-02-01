@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from re import search as re_search
 from urllib.parse import urlparse
 from time import sleep
-from pandas import DataFrame
 
 import threading
 import queue
@@ -25,12 +24,10 @@ class Search:
         self.__filter = filter
         self.__query = ""
         self.__social_media = social_media
-        self.__user_social_medias_searched:list[tuple] = []
         self.__twitter = Twitter(requests)
         for q in query:
             self.__query += q+'+'
         self.__query = self.__query[:len(self.__query)-1]
-        print(self.__query)
         if isinstance(filter,list):
             self.__filter = [i.lower() for i in filter]
 
@@ -44,29 +41,22 @@ class Search:
         if _filter:
             for i in soup.find_all("div",attrs=attr):
                 try:
-                    self.__lock.acquire()
                     for j in self.__filter:
                         link = i.a["href"]
                         match = re_search(r"\b{0}\b".format(j),link)
                         if match:
-                            print(_filter,j)
                             self.__que.put(match.string)
                 except Exception as e:
                     continue
-                finally:
-                    self.__lock.release()
 
         else:
              for i in soup.find_all("div",attrs=attr):
                 try:
-                    self.__lock.acquire()
                     if i.a['href'].startswith("https"):
                         if "books" not in urlparse(i.a['href']).netloc:
                             self.__que.put(i.a['href'])
                 except Exception as e:
                     continue
-                finally:
-                    self.__lock.release()
 
     def __request(self,slot:int):
         try:
@@ -101,12 +91,16 @@ class Search:
                 sleep(1)
                 Console.warn_display("Alternative Searched...")
                 self.__event.clear()
-                sleep(2)
+                sleep(1)
 
             if self.__que.qsize() != 0:
+                Console.warn_display("Searched Internet...")
+                sleep(1)
+                Console.warn_display(f"   {self.__que.qsize()} Link")
+                Console.display("──"*30)
                 while not self.__que.empty():
-                    Console.display_links(self.__que.get())
-                    self.__que.tast_done()
+                    Console.display_links(f"\t{self.__que.get():<10}")
+                    self.__que.task_done()
                     
                 Console.display(f"\n{Console.GREEN}{Console.CYAN}Search has end{Console.GREEN}")
             else:
@@ -123,11 +117,8 @@ class Search:
                 thread.join()
             
             if self.__que.qsize() != 0:
-                Console.display("screen_name\t","name\t","location\t")
-                Console.display("──"*30)
-                while not self.__que.empty():
-                    screen_name,name,location = self.__que.get()
-                    Console.display_links(f"{screen_name:<20}",f"{name:<20}",f"{location:<50}")
+                Console.setTable("[red][[cyan]STATE[red]]","[red][[green]USER[red]]","[red][[green]LOCATION[red]]","[red][[green]FOLLOWERS[red]]",title="[italic bold cyan]Twitter")
+                Console.table(self.__que)
 
     def __searchEngine(self,slot:int,other_engine:bool=False):
         if not other_engine:
@@ -140,15 +131,18 @@ class Search:
             attr = {"class":"yuRUbf"}
             return self.__linkfilter(response,attr,isinstance(self.__filter,list))
         else:
-            #Bing
-            params = {
-                "q" : self.__query,
-                "sp":'1',
-                "first": slot
-            }
-            response = requests.get(BINGSEARCH,params=params,headers=HEADER,cookies=self.__getCookie(BINGMAIN))
-            attr = {"class":"b_title"}
-            return self.__linkfilter(response,attr,isinstance(self.__filter,list))
+            try:
+                #Bing
+                params = {
+                    "q" : self.__query,
+                    "sp":'1',
+                    "first": slot
+                }
+                response = requests.get(BINGSEARCH,params=params,headers=HEADER,cookies=self.__getCookie(BINGMAIN))
+                attr = {"class":"b_title"}
+                return self.__linkfilter(response,attr,isinstance(self.__filter,list))
+            except requests.exceptions.ChunkedEncodingError:
+                pass
     
     def __findCaptcha(self):
         params = {
@@ -163,12 +157,11 @@ class Search:
             raise CaptchaError()
 
     def social(self,num:int):
-        for user in self.__query.split('+'):
-            try:
-                searched = self.__twitter.userSearch(user,userAgent())
-                screen_name = searched["users"][num]["screen_name"]
-                name = searched["users"][num]["name"]
-                location = searched["users"][num]["location"]
-                self.__que.put((screen_name,name,location))
-            except:
-                pass
+        try:
+            searched = self.__twitter.getUser(self.__query.split('+'),userAgent())
+            screen_name = searched["users"][num]["screen_name"]
+            location = searched["users"][num]["location"]
+            follower_count = self.__twitter.followerCount(screen_name)
+            self.__que.put((screen_name,location,follower_count))
+        except IndexError:
+            pass

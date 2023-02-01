@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 from pysint import Search,Console
+from os import name as os_name
+from os import system
 
 class App:
     def __init__(self) -> None:
@@ -16,6 +18,7 @@ class App:
     def run(self):
         __arguments = self.__argParse()
         if (__arguments.query):
+            system('cls'if os_name == 'nt' else 'clear')
             Console.display(Console.BANNER)
             search = Search( __arguments.query,__arguments.filter,__arguments.social_media) # __arguments.query,__arguments.filter
             search.getSearchedLinks()
