@@ -1,1 +1,1 @@
-colorama
+rich==12.6.0
