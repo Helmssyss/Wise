@@ -1,1 +1,3 @@
-rich==12.6.0
+rich
+requests
+beautifulsoup
