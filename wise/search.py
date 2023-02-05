@@ -1,12 +1,14 @@
 from .const import (HEADER,BINGMAIN,BINGSEARCH,GOOGLEMAIN,GOOGLESEARCH)
 from .console import Console
 from .social import TikTok,Twitter
-from threading import (Lock,Event,Thread)
+from threading import (Lock,Event,Thread,active_count)
 from queue import Queue
 from requests import Session
 from typing import Optional,Union
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+import time
 import re
 
 class __MainSearch:
@@ -15,9 +17,10 @@ class __MainSearch:
         social_media:Optional[bool]=False) -> None:
         self.console = Console()
         self.safe = Lock()
+        self.event = Event()
         self.queue = Queue()
         self.query = ""
-        self.page = 6
+        self.page = 3
         self.filter = filters
         self.social_media = social_media
         self.cookies = {}
@@ -36,7 +39,7 @@ class __MainSearch:
             response = session.get("https://www.google.com",params=params,headers=HEADER)
             soup = BeautifulSoup(response.content,"lxml")
             captcha = soup.find("form",attrs={"id":"captcha-form"})
-            if captcha:
+            if captcha or captcha == None:
                 return True # Captcha var
             else:
                 return False # Captcha Yok 'False' test için 'True Yap'
@@ -56,12 +59,14 @@ class __MainSearch:
 
             response = session.get(search_url,headers=HEADER,params=params,cookies=cookie)
             soup = BeautifulSoup(response.content,"lxml")
+            self.event.wait()
             for data in soup.find_all("div",attrs={"class":attr}):
                 try:
                     if self.urlParsed(data.a['href']) != ["bing.com"] or self.urlParsed(data.a['href'])[0] != "books.google.com.tr":
                         if self.filter == None:
                             self.safe.acquire()
                             self.console.display_links(data.a['href'])
+                            time.sleep(0.2)
                             self.safe.release()
                         else:
                             self.__filter(data.a['href'],self.filter)
@@ -74,7 +79,9 @@ class __MainSearch:
         for i in filter_:
             match = re.search(r"\b{0}\b".format(i),data)
             if match:
-                self.console.display_links(f"[link={data}]{i.upper()}[/link]")
+                self.console.display_links(match.string)
+                time.sleep(0.2)
+
 
     def social_data(self):
         twitter = Twitter()
@@ -93,9 +100,6 @@ class __MainSearch:
         self.console.print(twitter.data)
         print("tiktok")
         self.console.print_json(data=tiktok.getUser(self.query))
-        
-        
-
 
 class Search(__MainSearch):
     def __init__(self, query: Optional[list[str]] = None, filters: Optional[list[str]] = None, social_media: Optional[bool] = False) -> None:
@@ -107,11 +111,11 @@ class Search(__MainSearch):
             jump = 0
             attr = None
             url = None
-            
             if captcha:
                 jump = 11
                 attr = self.url_attr["bing"]
                 url = BINGSEARCH
+
             else:
                 jump = 10
                 attr = self.url_attr["google"]
@@ -120,5 +124,12 @@ class Search(__MainSearch):
             for i in range(0,self.page*10, jump):
                 thread = Thread(target=self.searchQuery,args=(i,url,attr))
                 thread.start()
+
+            self.console.print(f"\t\t [bold green][[red]*[bold green]] THREAD : [purple]{active_count() - 1}{chr(32)*len(str(self.filter))}[/purple][bold green][[red]*[bold green]] QUERY : [purple]{self.query.replace('+',' ')}[/purple]")
+            self.console.print(f"\t\t [bold green][[red]*[bold green]] FILTER : [/bold green]{self.filter} [bold green][[red]*[bold green]] SOCIAL-MEDIA : [purple]{self.social_media}[/purple]")
+            self.console.progress_bar(active_count() - 1)
+            self.event.set()
+            if captcha:
+                self.console.err_display("Captcha!\n")
         else:
             self.social_data()
