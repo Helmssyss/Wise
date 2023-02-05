@@ -8,7 +8,7 @@ from time import sleep
 
 class Console(Console):
     __BANNER = f"""
-\t\t[bold cyan]                        ,---.
+\t\t[bold blue]                        ,---.
 \t\t                       /    |
 \t\t                      /     |
 \t\t                     /      |
@@ -44,20 +44,20 @@ class Console(Console):
         output = ""
         for out in printable:
             output += out + chr(32)
-        self.print(f"{chr(32)*3}🟢 [purple]{output}",soft_wrap=True)
+        self.print(f"{chr(32)*3}[bold green][[red]+[green]] {output}",soft_wrap=True)
 
     def display(self,*obj:object):
         output = ""
         for out in obj:
             output += out + chr(32)
-        return self.print(f"{chr(32)*3}🔵 [green]{output}")
+        return self.print(f"{chr(32)*3}[bold green][[red]•[green]] {output}")
 
     def warn_display(self,printable:str):
-        return self.print(f"{chr(32)*3}🟠 [green]{printable}")
+        return self.print(f"{chr(32)*3}[bold green][[red]![green]] {printable}")
     
 
     def err_display(self,printable:str):
-        return self.print(f"{chr(32)*3}🔴 [green]{printable}")
+        return self.print(f"{chr(32)*3}[bold green][[red]×[green]] {printable}")
 
     def setTable(self,*column,title):
         columns:list[Column] = []
@@ -74,7 +74,7 @@ class Console(Console):
     
     def progress_bar(self,thread_num):
         with Progress() as progress:
-            task1 = progress.add_task(f"{chr(32)*3}🟡 [bold green]Threads Running[bold]", total=thread_num)
+            task1 = progress.add_task(f"{chr(32)*3}[bold green][[red]•[green]] Threads Running[bold]", total=thread_num)
             while not progress.finished:
                 progress.update(task1,advance=0.3)
                 sleep(0.2)
