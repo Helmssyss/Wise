@@ -1,7 +1,6 @@
 from wise import Search,Console
 from argparse import ArgumentParser
 
-
 def argParse():
     argP:ArgumentParser = ArgumentParser(description='How to Using')
     argP.add_argument("-q","--query","--dork",type=str,nargs='*')
