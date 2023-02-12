@@ -1,9 +1,8 @@
 from rich.live import Live
-from rich.table import Table, Column
+from rich.table import (Table, Column)
 from rich.console import Console
 from rich.box import SIMPLE_HEAVY
 from rich.progress import Progress
-from queue import Queue
 from time import sleep
 
 class Console(Console):
@@ -66,11 +65,13 @@ class Console(Console):
 
         self.table_ = Table(*columns,box=SIMPLE_HEAVY,title=title)
 
-    def table(self,*row):
-        rows:list[str] = []
-        for r in row:
-            rows.append(r)
-        self.table_.add_row(*rows)
+    def table(self,row:list[tuple[str]],link):
+        with Live(self.table_):
+            if type(row) == list:
+                for r in row:
+                    a,b,c = r
+                    self.table_.add_row(f"[bold purple][link={link}{a}]{a}[/link]",f"[bold purple]{b}",f"[bold purple]{c}")
+                    sleep(0.2)
     
     def progress_bar(self,thread_num):
         with Progress() as progress:
@@ -81,3 +82,7 @@ class Console(Console):
     @property
     def BANNER(self):
         return self.print(self.__BANNER)
+
+# c = Console()
+# c.setTable("aynen","zort",title="hebele")
+# c.table("selam","naber")

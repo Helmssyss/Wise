@@ -1,6 +1,6 @@
 from .const import (HEADER,BINGMAIN,BINGSEARCH,GOOGLEMAIN,GOOGLESEARCH)
 from .console import Console
-from .social import TikTok,Twitter
+from .social import Twitter,Instagram
 from threading import (Lock,Event,Thread,active_count)
 from queue import Queue
 from requests import Session
@@ -20,7 +20,7 @@ class __MainSearch:
         self.event = Event()
         self.queue = Queue()
         self.query = ""
-        self.page = 3
+        self.page = 5
         self.filter = filters
         self.social_media = social_media
         self.cookies = {}
@@ -43,6 +43,7 @@ class __MainSearch:
                 return True # Captcha var
             else:
                 return False # Captcha Yok 'False' test için 'True Yap'
+
     def urlParsed(self,url:str):
         return re.findall('://www.([\w\-\.]+)',url)
 
@@ -82,24 +83,34 @@ class __MainSearch:
                 self.console.display_links(match.string)
                 time.sleep(0.2)
 
-
     def social_data(self):
         twitter = Twitter()
-        tiktok = TikTok()
+        instagram = Instagram()
         twitter.username = self.query.split('+')
+        instagram.username = self.query.split('+')
         social_threads = []
+
         for i in range(10):
-            t = Thread(target=twitter.get,args=(i,),daemon=True)
+            t = Thread(target=twitter.getUsers,args=(i,),daemon=True)
             t.start()
             social_threads.append(t)
-        
+
+        instagram.userSearch()
+        for i in range(20):
+            t = Thread(target=instagram.getUsers,args=(i,))
+            t.start()
+
+        self.console.print(f"\t\t [bold green][[red]*[bold green]] THREAD : [purple]{active_count() - 1}{chr(32)*(len(str(self.filter))+1)}[/purple][bold green][[red]*[bold green]] QUERY : [purple]{self.query.replace('+',' ')}[/purple]")
+        self.console.print(f"\t\t [bold green][[red]*[bold green]] FILTER : [/bold green]{self.filter}  [bold green][[red]*[bold green]] SOCIAL-MEDIA : [purple]{self.social_media}[/purple]\n")
+        self.console.progress_bar(active_count() - 1)
         for t in social_threads:
             t.join()
 
-        print("twitter")
-        self.console.print(twitter.data)
-        print("tiktok")
-        self.console.print_json(data=tiktok.getUser(self.query))
+        self.console.setTable("[NAME]","[FOLLOWER]","[VERIFIED]",title="Twitter")
+        self.console.table(twitter.result_data,link="https://twitter.com/")
+
+        self.console.setTable("[NAME]","[FOLLOWER]","[VERIFIED]",title="Instagram")
+        self.console.table(instagram.data,link="https://instagram.com/")
 
 class Search(__MainSearch):
     def __init__(self, query: Optional[list[str]] = None, filters: Optional[list[str]] = None, social_media: Optional[bool] = False) -> None:
@@ -129,7 +140,7 @@ class Search(__MainSearch):
             self.console.print(f"\t\t [bold green][[red]*[bold green]] FILTER : [/bold green]{self.filter} [bold green][[red]*[bold green]] SOCIAL-MEDIA : [purple]{self.social_media}[/purple]")
             self.console.progress_bar(active_count() - 1)
             self.event.set()
-            if captcha:
-                self.console.err_display("Captcha!\n")
+            # if captcha:
+            #     self.console.err_display("Captcha!\n")
         else:
             self.social_data()
