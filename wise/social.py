@@ -76,7 +76,6 @@ class Twitter:
 
 class Instagram:
     def __init__(self) -> None:
-        self.json_data:list[dict] = None
         self.result_data = {}
         self.data = []
         self.username = ""
@@ -150,3 +149,77 @@ class Instagram:
             followers = meta[16]
             followers = str(followers).split(' - ')
             return followers[0].removeprefix("<meta content=").split("Followers,")[0][1:].replace(',','')
+        
+    
+class TikTok:
+    def __init__(self) -> None:
+        self.data = {}
+        self.result_data = []
+        self.username = ''
+        self.tokens = {}
+
+    def getTokens(self):
+        with Session() as session:
+            BASE_URL = "https://tiktok.com"
+            headers={
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_7_6) AppleWebKit/5352 (KHTML, like Gecko) Chrome/37.0.834.0 Mobile Safari/5352'
+            }
+            r = session.get(BASE_URL,headers=headers)
+            cookies:dict = r.cookies.get_dict()
+            self.tokens.update({
+                "tt_chain_token" : cookies["tt_chain_token"],
+                "tt_csrf_token" : cookies["tt_csrf_token"],
+                "ttwid" : cookies["ttwid"],
+                "msToken" : cookies["msToken"]
+            })
+
+    @property
+    def headers(self) -> dict:
+        self.getTokens()
+        return {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_7_6) AppleWebKit/5352 (KHTML, like Gecko) Chrome/37.0.834.0 Mobile Safari/5352',
+            "accept-language": "tr,en;q=0.9,en-GB;q=0.8,en-US;q=0.7",
+            "accept": "*/*",
+            "content-type": "application/json; charset=utf-8",
+            "x-ms-token" : self.tokens["msToken"]
+        }
+    
+    def searchUser(self):
+        with Session() as session:
+            params = {
+                "aid": "1988",
+                "app_language": "tr",
+                "app_name": "tiktok_web",
+                "battery_info": "1",
+                "browser_language": "tr",
+                "browser_name": "Mozilla",
+                "browser_online": "true",
+                "browser_platform": "Win32",
+                "browser_version": "5.0 (Macintosh; U; Intel Mac OS X 10_7_6) AppleWebKit/5352 (KHTML, like Gecko) Chrome/37.0.834.0 Mobile Safari/5352",
+                "channel": "tiktok_web",
+                "cookie_enabled": "true",
+                "device_id": "7198841699089532422",
+                "device_platform": "web_pc",
+                "focus_state": "true",
+                "from_page": "search",
+                "history_len": "2",
+                "is_fullscreen": "false",
+                "is_page_visible": "true",
+                "keyword": "elraen",
+                "os": "windows",
+                "priority_region" : '',
+                "referer" :'',
+                "region": "TR",
+                "screen_height": "864",
+                "screen_width": "1536",
+                "tz_name": "Europe/Istanbul",
+                "webcast_language": "tr-TR"
+            }
+            cookie = {
+                "msToken":self.tokens["msToken"]
+            }
+            r = session.get("https://www.tiktok.com/api/search/general/preview/",headers=self.headers,params=params,cookies=cookie)
+            self.data = r.json()
+    
+    def getUsers(self):
+        pass

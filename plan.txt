@@ -2,36 +2,3 @@ https://www.instagram.com/api/v1/users/web_profile_info/
 
 
 twitter, instagram, facebook, github, tiktok,linkedin, youtube sitelerinde arama yapar
-
-
-\t\t[bold cyan]                        ,---.
-\t\t                       /    |
-\t\t                      /     |
-\t\t                     /      |
-\t\t                    /       |
-\t\t               ___,'        |
-\t\t             <  -'          :
-\t\t              `-.__..--'``-,_\_
-\t\t                 |o/ ` :,.)_`>
-\t\t                :/ `     ||/)
-\t\t                 (_.).__,-` |\\
-\t\t                 /( `.``   `| :
-\t\t                 \'`-.)  `  ; ;
-\t\t                 | `       /-<
-\t\t                 |     `  /   `.
-\t\t ,-_-..____     /|  `    :__..-'\\
-\t\t/,'-.__\\  ``-./ :`      ;       \\
-\t\t`\ `\  `\\  \ :  (   `  /  ,   `. \\
-\t\t  \` \   \\   |  | `   :  :     .\ \\
-\t\t   \ `\_  ))  :  ;     |  |      ):
-\t\t  (`-.-'\ ||  |\ \   ` ;  ;       |
-\t\t   \-_   `;;._   ( `  /  /_       |
-\t\t    `-.-.// ,'`-._\__/_,'         ;
-\t\t       \:: :     /     `     ,   /  
-\t\t        || |    (        ,' /   /   
-\t\t   [bold magenta]     ||                ,'   /           
-\t\t\t [bold purple]\\ _      __(_)_______/
-\t\t\t  | | /| / / / ___/ _ \\
-\t\t\t  | |/ |/ / (__  )  __/
-\t\t\t  |__/|__/_/____/\___/
-\t\t\t    [bold magenta]source: [link=https://github.com/Arif-Helmsys]GITHUB[/link]"""
