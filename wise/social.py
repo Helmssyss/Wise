@@ -89,7 +89,7 @@ class Instagram:
             response = session.get(URL,headers=header)
             soup = BeautifulSoup(response.content,"lxml")
             regex = r".*csrf_token\":\"([^\"]+)\".*"
-            for i in soup.find_all("script")[25]:
+            for i in soup.find_all("script")[72]:
                 token = i.split("XIGSharedData")[1][5:].replace('\\','')
                 match = re.match(regex, token)
                 if match:
