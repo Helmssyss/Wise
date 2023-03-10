@@ -89,11 +89,16 @@ class Instagram:
             response = session.get(URL,headers=header)
             soup = BeautifulSoup(response.content,"lxml")
             regex = r".*csrf_token\":\"([^\"]+)\".*"
-            for i in soup.find_all("script")[72]:
-                token = i.split("XIGSharedData")[1][5:].replace('\\','')
-                match = re.match(regex, token)
-                if match:
-                    return match.group(1)
+            scraping_script_tags = soup.find_all("script")
+            for i in range(len(scraping_script_tags)):
+                for j in scraping_script_tags[i]:
+                    try:
+                        token = j.split("XIGSharedData")[1][5:].replace('\\','')
+                        match = re.match(regex, token)
+                        if match:
+                            return match.group(1)
+                    except IndexError:
+                        continue
 
     def userSearch(self):
         with Session() as session:
