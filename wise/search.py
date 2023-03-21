@@ -14,7 +14,9 @@ import re
 class __MainSearch:
     def __init__(self,query:Optional[list[str]]=None,
         filters:Optional[list[str]]=None,
-        social_media:Optional[bool]=False) -> None:
+        social_media:Optional[bool]=False,
+        proxy:str=None) -> None:
+        self.proxy = proxy
         self.console = Console()
         self.safe = Lock()
         self.event = Event()
@@ -26,7 +28,7 @@ class __MainSearch:
         self.cookies = {}
         self.url_attr = {"google":"yuRUbf","bing":"b_title"}
         for q in query:
-            self.query += q + '+'
+            self.query += q + ' '
         self.query = self.query[:len(self.query)-1]
 
     def getCookies(self,base_url):
@@ -39,6 +41,7 @@ class __MainSearch:
             response = session.get("https://www.google.com",params=params,headers=HEADER)
             soup = BeautifulSoup(response.content,"lxml")
             captcha = soup.find("form",attrs={"id":"captcha-form"})
+            # return False
             if captcha or captcha == None:
                 return True # Captcha var
             else:
@@ -57,13 +60,14 @@ class __MainSearch:
             elif search_url == BINGSEARCH:
                 params = {"q":self.query,"sp":"1","first":slot}
                 cookie = self.getCookies(BINGMAIN)
-
+                
             response = session.get(search_url,headers=HEADER,params=params,cookies=cookie)
+            # print(response.url)
             soup = BeautifulSoup(response.content,"lxml")
             self.event.wait()
             for data in soup.find_all("div",attrs={"class":attr}):
                 try:
-                    if self.urlParsed(data.a['href']) != ["bing.com"] or self.urlParsed(data.a['href'])[0] != "books.google.com.tr":
+                    if urlparse(data.a['href']) != ["bing.com"] or urlparse(data.a['href'])[0] != "books.google.com.tr":
                         if self.filter == None:
                             self.safe.acquire()
                             self.console.display_links(data.a['href'])
@@ -74,7 +78,6 @@ class __MainSearch:
                 except Exception as e:
                     pass
                     # print(e,slot,search_url,attr)
-                    # return self.searchQuery(slot,search_url,attr)
     
     def __filter(self,data,filter_):
         for i in filter_:
@@ -85,9 +88,10 @@ class __MainSearch:
 
     def social_data(self):
         twitter = Twitter()
-        instagram = Instagram()
+        instagram = Instagram(self.proxy)
         twitter.username = self.query.split('+')
         instagram.username = self.query.split('+')
+        instagram.getCSRFtoken()
         social_threads = []
 
         for i in range(10):
@@ -96,6 +100,7 @@ class __MainSearch:
             social_threads.append(t)
 
         instagram.userSearch()
+        # instagram.getUsers(1)
         for i in range(20):
             t = Thread(target=instagram.getUsers,args=(i,))
             t.start()
@@ -112,9 +117,10 @@ class __MainSearch:
         self.console.setTable("[NAME]","[FOLLOWER]","[VERIFIED]",title="Instagram")
         self.console.table(instagram.data,link="https://instagram.com/")
 
+
 class Search(__MainSearch):
-    def __init__(self, query: Optional[list[str]] = None, filters: Optional[list[str]] = None, social_media: Optional[bool] = False) -> None:
-        super().__init__(query, filters, social_media)
+    def __init__(self, query: Optional[list[str]] = None, filters: Optional[list[str]] = None, social_media: Optional[bool] = False, proxy: str = None) -> None:
+        super().__init__(query, filters, social_media, proxy)
 
     def start(self):
         if not self.social_media:
@@ -123,11 +129,13 @@ class Search(__MainSearch):
             attr = None
             url = None
             if captcha:
+                print("bing")
                 jump = 11
                 attr = self.url_attr["bing"]
                 url = BINGSEARCH
 
             else:
+                print("google")
                 jump = 10
                 attr = self.url_attr["google"]
                 url = GOOGLESEARCH
@@ -140,7 +148,5 @@ class Search(__MainSearch):
             self.console.print(f"\t\t [bold green][[red]*[bold green]] FILTER : [/bold green]{self.filter} [bold green][[red]*[bold green]] SOCIAL-MEDIA : [purple]{self.social_media}[/purple]")
             self.console.progress_bar(active_count() - 1)
             self.event.set()
-            # if captcha:
-            #     self.console.err_display("Captcha!\n")
         else:
             self.social_data()
